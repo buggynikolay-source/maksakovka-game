@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Верхняя Максаковка — Пролог «Спиннер» (прототип __VERSION__)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#eee;font-family:"Trebuchet MS",Verdana,Arial,sans-serif;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;cursor:crosshair}
+.ui{position:fixed;pointer-events:none;z-index:5}
+#cross{left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:rgba(255,255,255,.75);box-shadow:0 0 2px #000;transition:all .12s}
+#cross.hot{width:14px;height:14px;margin:-7px 0 0 -7px;background:transparent;border:2px solid #fff}
+#prompt{left:50%;top:56%;transform:translateX(-50%);padding:6px 12px;background:rgba(10,12,16,.72);border:1px solid rgba(255,255,255,.18);font-size:16px;opacity:0;transition:opacity .15s;white-space:nowrap}
+#prompt.on{opacity:1}
+.key{display:inline-block;min-width:22px;padding:1px 6px;margin-right:6px;border:1px solid #ddd;border-bottom-width:3px;border-radius:3px;font-weight:bold;text-align:center;background:#222}
+#dlg{left:50%;bottom:5%;transform:translateX(-50%);width:min(860px,92vw);min-height:104px;padding:14px 20px 16px;background:linear-gradient(rgba(8,10,14,.86),rgba(8,10,14,.93));border:1px solid rgba(255,255,255,.16);border-left:4px solid #9fd3ff;opacity:0;transition:opacity .15s}
+#dlg.on{opacity:1}
+#dlg-name{font-weight:bold;font-size:17px;margin-bottom:6px;letter-spacing:.5px}
+#dlg-text{font-size:20px;line-height:1.42;text-shadow:0 1px 0 #000}
+#dlg.think #dlg-text{font-style:italic;color:#cfe6ff}
+#dlg.ital #dlg-text{font-style:italic;color:#d8ffc4}
+#dlg-next{position:absolute;right:14px;bottom:8px;font-size:13px;color:#aaa;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+#choices{left:50%;bottom:calc(5% + 128px);transform:translateX(-50%);width:min(760px,90vw);display:none;pointer-events:auto}
+#choices.on{display:block}
+.ch{padding:9px 14px;margin-top:6px;background:rgba(10,12,18,.84);border:1px solid rgba(255,255,255,.14);font-size:18px;cursor:pointer}
+.ch .n{display:inline-block;width:24px;color:#ffd36b;font-weight:bold}
+.ch.sel{background:rgba(40,70,110,.92);border-color:#9fd3ff}
+.ch.locked{color:#888;cursor:not-allowed;background:rgba(10,10,12,.7)}
+.ch .h{font-size:13px;color:#b9a46a;margin:3px 0 0 24px;font-style:italic}
+#tasks{left:18px;top:16px;max-width:42vw;font-size:15px;text-shadow:0 1px 2px #000}
+#tasks .hd{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#ffd36b;margin-bottom:4px}
+#tasks .tk{padding:2px 8px;margin-bottom:2px;background:rgba(0,0,0,.35);border-left:2px solid #ffd36b}
+#tasks .tk.done{color:#8f8;opacity:.6;text-decoration:line-through;border-color:#8f8}
+#toasts{right:18px;top:16px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.toast{padding:7px 12px;background:rgba(10,12,16,.82);border:1px solid rgba(255,255,255,.15);font-size:15px;transition:opacity .8s,transform .8s;animation:tin .3s}
+.toast.rem{border-left:3px solid #9fd3ff;color:#d8ecff}
+.toast.rem.neg{border-left-color:#ff8a8a;color:#ffd8d8}
+.toast.trait{border-left:3px solid #ffd36b;color:#ffe9b0;font-size:13px}
+.toast.out{opacity:0;transform:translateX(30px)}
+@keyframes tin{from{opacity:0;transform:translateX(30px)}}
+#hint{left:50%;bottom:calc(5% + 124px);transform:translateX(-50%);padding:8px 16px;background:rgba(0,0,0,.55);font-size:15px;opacity:0;transition:opacity .4s;text-align:center;white-space:nowrap}
+#hint.on{opacity:1}
+#hint b{color:#ffd36b}
+#card{left:7%;top:30%;opacity:0;transition:opacity 1.2s;text-shadow:0 2px 8px #000}
+#card.on{opacity:1}
+#card .t1{font-size:46px;font-weight:bold;letter-spacing:1px}
+#card .t2{font-size:22px;color:#ddd;margin-top:6px}
+#bark{left:50%;top:70%;transform:translateX(-50%);padding:6px 14px;background:rgba(0,0,0,.5);font-size:17px;opacity:0;transition:opacity .3s;white-space:nowrap}
+#bark.on{opacity:1}
+#fade{inset:0;background:#000;opacity:1;z-index:8}
+#photo{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.6);opacity:0;transition:opacity .3s;z-index:7}
+#photo.on{opacity:1}
+#photo canvas{width:min(520px,70vw);image-rendering:pixelated;border:10px solid #f2efe6;border-bottom-width:34px;box-shadow:0 10px 30px #000;transform:rotate(-1.5deg)}
+#photo .cap{margin-top:14px;font-size:17px;font-style:italic;color:#ddd}
+#rec{right:22px;top:50%;color:#ff4040;font-weight:bold;font-size:18px;display:none;text-shadow:0 0 4px #000}
+#rec.on{display:block;animation:blink 1s infinite}
+#lockhint{display:none}
+.screen{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(ellipse at 50% 40%,rgba(30,40,55,.92),rgba(0,0,0,.97))}
+.screen.on{display:flex}
+#title{background:linear-gradient(180deg,#1b2a3c 0%,#3a4a52 45%,#6a6a58 70%,#1a1a16 100%)}
+#title::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 2px,transparent 2px 4px);pointer-events:none}
+.logo{text-align:center;margin-bottom:38px;text-shadow:0 3px 0 #000,0 0 20px rgba(0,0,0,.6)}
+.logo .t1{font-size:min(64px,9vw);font-weight:bold;letter-spacing:2px;color:#f2ead8}
+.logo .t2{font-size:20px;color:#ffd36b;margin-top:8px}
+.logo .t3{font-size:14px;color:#bbb;margin-top:12px;font-style:italic}
+.menu{display:flex;flex-direction:column;gap:10px;min-width:320px;align-items:stretch;position:relative}
+.menu button,.row button,.seg button,#s-done,#e-again,#e-menu{font:inherit;font-size:18px;padding:10px 18px;background:rgba(15,20,28,.85);color:#eee;border:1px solid rgba(255,255,255,.25);cursor:pointer}
+.menu button:hover,.row button:hover,.seg button:hover,#s-done:hover,#e-again:hover,#e-menu:hover{background:rgba(50,80,120,.95);border-color:#9fd3ff}
+.row{display:flex;gap:6px;align-items:center;justify-content:center;font-size:14px;color:#aaa;flex-wrap:wrap}
+.row button{font-size:14px;padding:6px 10px}
+.foot{position:absolute;bottom:20px;font-size:13px;color:#999;text-align:center;width:100%}
+.ptitle{font-size:40px;font-weight:bold;margin-bottom:24px}
+#set-body{display:flex;flex-direction:column;gap:12px;width:min(640px,92vw);margin-bottom:22px}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:16px}
+.seg{display:flex;gap:4px}
+.seg button{font-size:14px;padding:6px 10px}
+.seg button.on{background:#2b5a8a;border-color:#9fd3ff}
+.rng{display:flex;align-items:center;gap:10px}
+.rng input{width:200px}
+.rng span{width:52px;text-align:right;color:#ffd36b}
+input[type=checkbox]{width:20px;height:20px}
+#end-body{width:min(980px,94vw);max-height:76vh;overflow:auto;padding:0 8px}
+.e1{font-size:40px;font-weight:bold;text-align:center}
+.e2{text-align:center;color:#bbb;margin:6px 0 22px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.cols h3{font-size:15px;letter-spacing:1.5px;text-transform:uppercase;color:#ffd36b;margin:6px 0 8px}
+.cols ul{list-style:none}
+.cols li{padding:6px 10px;margin-bottom:5px;background:rgba(255,255,255,.06);font-size:16px}
+.locks li.ok{border-left:3px solid #8f8}
+.locks li.no{border-left:3px solid #c88;color:#ccc}
+.bd{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:1px 6px;margin-right:4px;border-radius:2px;background:#2f5a2f;color:#cfc}
+.no .bd{background:#5a2f2f;color:#fcc}
+.dbg{margin-top:18px;font-size:13px;color:#888;text-align:center}
+.ebtn{display:flex;gap:12px;justify-content:center;margin-top:20px}
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;z-index:30;font-size:20px;color:#aaa}
+#err{position:fixed;left:8px;bottom:8px;max-width:60vw;max-height:30vh;overflow:auto;background:rgba(120,0,0,.85);color:#fff;font:12px monospace;padding:8px;z-index:40;display:none;white-space:pre-wrap;user-select:text;pointer-events:auto}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="cross" class="ui"></div>
+<div id="tasks" class="ui"></div>
+<div id="toasts" class="ui"></div>
+<div id="card" class="ui"><div class="t1"></div><div class="t2"></div></div>
+<div id="bark" class="ui"></div>
+<div id="prompt" class="ui"></div>
+<div id="hint" class="ui"></div>
+<div id="rec" class="ui">● REC</div>
+<div id="choices" class="ui"></div>
+<div id="dlg" class="ui"><div id="dlg-name"></div><div id="dlg-text"></div><div id="dlg-next">▼ E / клик</div></div>
+<div id="photo" class="ui"><canvas></canvas><div class="cap"></div></div>
+<div id="lockhint" class="ui"></div>
+<div id="fade" class="ui"></div>
+<div id="title" class="screen on">
+  <div class="logo"><div class="t1">Верхняя Максаковка</div><div class="t2">Пролог «Спиннер» · прототип __VERSION__</div><div class="t3">31 мая 2017 года. Последний день седьмого класса.</div></div>
+  <div class="menu"><button id="b-new">Новая игра</button><button id="b-cont">Продолжить</button><button id="b-set">Настройки</button></div>
+  <div class="foot">Мышь — осмотреться · WASD — идти · Shift — бегом · E — действие · F — крутануть спиннер · Esc — пауза<br>Лучше в наушниках</div>
+</div>
+<div id="pause" class="screen">
+  <div class="ptitle">Пауза</div>
+  <div class="menu"><button id="p-res">Продолжить</button><button id="p-set">Настройки</button><button id="p-restart">Начать сцену заново</button>
+  <div class="row">Перейти к сцене (для теста): <button data-sc="flat">Квартира</button><button data-sc="stairs">Подъезд</button><button data-sc="yard">Двор</button></div>
+  <button id="p-menu">В главное меню</button></div>
+</div>
+<div id="settings" class="screen"><div class="ptitle">Настройки</div><div id="set-body"></div><button id="s-done">Готово</button></div>
+<div id="end" class="screen"><div id="end-body"></div><div class="ebtn"><button id="e-again">Сыграть ещё раз</button><button id="e-menu">В главное меню</button></div></div>
+<div id="loading">Загрузка…</div>
+<div id="err"></div>
+<script id="three-src" type="text/plain">__THREE__</script>
+<script type="module">
+__GAME__
+</script>
+</body>
+</html>

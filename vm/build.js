@@ -1,0 +1,13 @@
+const fs = require('fs'), path = require('path');
+const dir = '/data/vm';
+const files = fs.readdirSync(path.join(dir, 'src')).filter((f) => f.endsWith('.js')).sort();
+let game = files.map((f) => `// ---- ${f} ----\n` + fs.readFileSync(path.join(dir, 'src', f), 'utf8')).join('\n');
+const three = fs.readFileSync(path.join(dir, 'three.module.min.js'), 'utf8');
+for (const [n, s] of [['three', three], ['game', game]]) if (/<\/script/i.test(s)) throw new Error(n + ' contains </script');
+const ver = (game.match(/const VERSION = '([^']+)'/) || [])[1] || 'v0';
+let html = fs.readFileSync(path.join(dir, 'shell.html'), 'utf8').split('__VERSION__').join(ver);
+const i1 = html.indexOf('__THREE__'); html = html.slice(0, i1) + three + html.slice(i1 + 9);
+const i2 = html.indexOf('__GAME__'); html = html.slice(0, i2) + game + html.slice(i2 + 8);
+const out = path.join(dir, 'dist', `maksakovka_prologue_${ver}.html`);
+fs.writeFileSync(out, html);
+console.log(out, (html.length / 1024).toFixed(0) + ' KB', files.join(' '));
