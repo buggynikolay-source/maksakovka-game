@@ -133,7 +133,7 @@ function makeDoor(o) {
   // ручка
   const hm = MC(0xb8a070);
   const knob = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.03, 0.03), hm);
-  if (o.axis === 'x') { knob.position.set(-s * (w - 0.1), 1.0 - h / 2, 0.05); knob.scale.z = 2.5; } else { knob.position.set(0.05, 1.0 - h / 2, -s * (w - 0.1)); knob.rotation.y = Math.PI / 2; knob.scale.z = 2.5; }
+  if (o.axis === 'x') { knob.position.set(-s * (w / 2 - 0.08), 1.0 - h / 2, 0.05); knob.scale.z = 2.5; } else { knob.position.set(0.05, 1.0 - h / 2, -s * (w / 2 - 0.08)); knob.rotation.y = Math.PI / 2; knob.scale.z = 2.5; }
   leaf.add(knob);
   W.scene.add(pivot); W.blockers.push(leaf);
   const col = o.axis === 'x' ? addCol(o.x - w / 2, y, o.z - 0.06, o.x + w / 2, y + h, o.z + 0.06) : addCol(o.x - 0.06, y, o.z - w / 2, o.x + 0.06, y + h, o.z + w / 2);
