@@ -242,7 +242,8 @@ SCENES.stairs = {
         await D.open(0.5, 1.3); await V.walkTo([[-0.85, -1.5, -3.8]], 1.6); V.show(false); if (beat) { beat.stop(); beat = null; }
       });
     }
-    // выход
+    // выход addTrigger(() => P.pos.y < -1.0 && P.pos.z < -3.25,
+  () => run(async () => { doneTask('down'); await goScene('yard'); }));
     addInter({ box: [0.9, 2.1, 0.3], at: [-0.85, -0.45, -2.95], label: 'Выйти во двор', fn: async () => {
       if (!st.vladDone) { await vladTalk(); return; }
       if (D.ang < 1) await D.open(0.5, 1.3);
